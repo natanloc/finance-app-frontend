@@ -28,7 +28,7 @@ Permite o cadastro e listagem de transações financeiras, exibindo os dados de 
 ## 📦 Instalação e Execução
 
 # 1. Clonar o repositório
-git clone https://github.com/seu-usuario/finance-app.git
+git clone https://github.com/natanloc/finance-app.git
 
 # 2. Instalar dependências
 npm install
