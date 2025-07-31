@@ -33,6 +33,9 @@ export function ControlTable() {
 					Frequency
 				</TableHead>
 				<TableHead className="font-bold text-muted-foreground">Date</TableHead>
+				<TableHead className="font-bold text-muted-foreground">
+					Validity
+				</TableHead>
 				<TableHead className="w-[20px]"></TableHead>
 			</TableHeader>
 
@@ -50,7 +53,14 @@ export function ControlTable() {
 						<TableCell>{transaction.status}</TableCell>
 						<TableCell>{transaction.frequency}</TableCell>
 						<TableCell>
-							{new Date(transaction.date).toLocaleDateString("pt-BR")}
+							{transaction.date
+								? new Date(transaction.date).toLocaleDateString("pt-BR")
+								: undefined}
+						</TableCell>
+						<TableCell>
+							{transaction.validity != null
+								? new Date(transaction.validity).toLocaleDateString("pt-BR")
+								: "-"}
 						</TableCell>
 						<TableCell className="flex gap-2">
 							<Button variant="outline">

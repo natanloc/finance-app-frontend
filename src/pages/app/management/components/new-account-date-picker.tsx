@@ -11,9 +11,17 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover"
 
-export function DatePickerModalNewAccount() {
+interface datePickerProps {
+	value?: Date | null
+	onChange: (date?: Date | null) => void
+}
+
+export function DatePickerDialogNewTransaction({
+	value,
+	onChange,
+}: datePickerProps) {
 	const [open, setOpen] = React.useState(false)
-	const [date, setDate] = React.useState<Date | undefined>(undefined)
+	// const [date, _setDate] = React.useState<Date | undefined>(undefined)
 
 	return (
 		<div className="flex flex-col gap-3">
@@ -22,19 +30,19 @@ export function DatePickerModalNewAccount() {
 					<Button
 						variant="outline"
 						id="date"
-						className="w-48 justify-between font-normal"
+						className="w-32 justify-between font-normal"
 					>
-						{date ? date.toLocaleDateString() : "Select date"}
+						{value ? value.toLocaleDateString() : "Select date"}
 						<ChevronDownIcon />
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent className="w-auto overflow-hidden p-0" align="start">
 					<Calendar
 						mode="single"
-						selected={date}
+						selected={value ?? undefined}
 						captionLayout="dropdown"
 						onSelect={(date) => {
-							setDate(date)
+							onChange(date ?? null)
 							setOpen(false)
 						}}
 					/>
