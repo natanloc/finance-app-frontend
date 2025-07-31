@@ -5,6 +5,6 @@ export interface transactionData {
 	type: "Income" | "Outcome"
 	status: "Paid" | "Pending"
 	frequency: "Fixed" | "Variable"
-	date?: string | Date
-	validity?: string | Date | null
+	date?: Date
+	validity?: Date | null
 }

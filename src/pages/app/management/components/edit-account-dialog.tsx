@@ -18,13 +18,12 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select"
-import { Plus } from "lucide-react"
+import { Edit } from "lucide-react"
 import { DatePickerDialogNewTransaction } from "./new-account-date-picker"
 import { z } from "zod"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { createTransaction } from "@/api/create-transaction"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import type { transactionData } from "@/types/transaction"
 
 const newTransactionFormSchema = z.object({
 	name: z.string().min(1, "Required field"),
@@ -38,64 +37,73 @@ const newTransactionFormSchema = z.object({
 
 type newTransactionFormInputs = z.infer<typeof newTransactionFormSchema>
 
-export function DialogAccount() {
+export function DialogEditAccount({
+	name,
+	price,
+	date,
+	type,
+	status,
+	frequency,
+	validity,
+}: transactionData) {
 	const {
 		control,
 		register,
 		handleSubmit,
 		formState: { isSubmitting },
-		reset,
 	} = useForm<newTransactionFormInputs>({
 		resolver: zodResolver(newTransactionFormSchema),
 		defaultValues: {
-			date: new Date(),
-			type: "Outcome",
-			frequency: "Variable",
-			status: "Paid",
-			validity: null,
+			name: name,
+			price: price,
+			status: status,
+			type: type,
+			frequency: frequency,
+			date: new Date(date),
+			validity: validity ? new Date(validity) : validity,
 		},
 	})
 
-	const queryClient = useQueryClient()
-
-	const { mutateAsync: createTransactionMutation } = useMutation({
-		mutationFn: handleCreateTransaction,
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["transactions"] })
-		},
-	})
-
-	async function handleCreateTransaction(data: newTransactionFormInputs) {
+	function handleEditTransaction(data: newTransactionFormInputs) {
 		const { name, price, date, frequency, status, type, validity } = data
 
-		await createTransaction({
+		console.log(
+			"Name: ",
 			name,
+			"\n",
+			"Price: ",
 			price,
+			"\n",
+			"Date: ",
 			date,
+			"\n",
+			"Frequency: ",
 			frequency,
+			"\n",
+			"Status: ",
 			status,
+			"\n",
+			"Type: ",
 			type,
-			validity: validity ?? null,
-		})
-		reset()
+			"\n",
+			"Validity: ",
+			validity,
+		)
 	}
 
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button variant="secondary">
-					<Plus />
-					New Account
+				<Button variant="outline">
+					<Edit />
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-[425px]">
-				<form
-					onSubmit={handleSubmit((data) => createTransactionMutation(data))}
-				>
+				<form onSubmit={handleSubmit(handleEditTransaction)}>
 					<DialogHeader>
-						<DialogTitle>New Account</DialogTitle>
+						<DialogTitle>Editing Account</DialogTitle>
 						<DialogDescription>
-							Add a new account to your management table.
+							Edit your account to fix or add new informations.
 						</DialogDescription>
 					</DialogHeader>
 
@@ -208,13 +216,12 @@ export function DialogAccount() {
 						</div>
 					</div>
 					<DialogFooter className="mt-8">
-						<DialogClose className="flex items-center gap-3">
+						<DialogClose asChild>
 							<Button variant="outline">Cancel</Button>
-
-							<Button type="submit" disabled={isSubmitting}>
-								Save
-							</Button>
 						</DialogClose>
+						<Button type="submit" disabled={isSubmitting}>
+							Save
+						</Button>
 					</DialogFooter>
 				</form>
 			</DialogContent>

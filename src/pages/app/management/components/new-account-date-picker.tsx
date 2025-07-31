@@ -32,7 +32,7 @@ export function DatePickerDialogNewTransaction({
 						id="date"
 						className="w-32 justify-between font-normal"
 					>
-						{value ? value.toLocaleDateString() : "Select date"}
+						{value ? value.toLocaleDateString("pt-BR") : "Select date"}
 						<ChevronDownIcon />
 					</Button>
 				</PopoverTrigger>

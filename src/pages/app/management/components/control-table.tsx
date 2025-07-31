@@ -1,5 +1,3 @@
-import { listTransactions } from "@/api/list-transactions"
-import { Button } from "@/components/ui/button"
 import {
 	Table,
 	TableBody,
@@ -9,14 +7,14 @@ import {
 	TableRow,
 } from "@/components/ui/table"
 import type { transactionData } from "@/types/transaction"
-import { useQuery } from "@tanstack/react-query"
-import { Edit, X } from "lucide-react"
+import { ArrowDown, ArrowUp } from "lucide-react"
+import { DialogEditAccount } from "./edit-account-dialog"
+import { useContext } from "react"
+import { TransactionsContext } from "@/contexts/transactions-context"
+import { DeleteTransactionConfirmation } from "./delete-transaction-dialog"
 
 export function ControlTable() {
-	const { data: transactions } = useQuery({
-		queryKey: ["transactions"],
-		queryFn: listTransactions,
-	})
+	const { transactions } = useContext(TransactionsContext)
 
 	return (
 		<Table>
@@ -49,8 +47,28 @@ export function ControlTable() {
 								currency: "BRL",
 							})}
 						</TableCell>
-						<TableCell>{transaction.type}</TableCell>
-						<TableCell>{transaction.status}</TableCell>
+						<TableCell>
+							<div className="flex items-center gap-2">
+								{transaction.type === "Income" ? (
+									<ArrowUp className="text-emerald-600 w-3 h-3" />
+								) : (
+									<ArrowDown className="text-rose-600 w-3 h-3" />
+								)}
+								{transaction.type}
+							</div>
+						</TableCell>
+						<TableCell>
+							<div className="flex items-center gap-2">
+								<span
+									className={
+										transaction.status === "Paid"
+											? "rounded-full w-2 h-2 bg-emerald-600 inline-block"
+											: "rounded-full w-2 h-2 bg-rose-600 inline-block"
+									}
+								></span>
+								{transaction.status}
+							</div>
+						</TableCell>
 						<TableCell>{transaction.frequency}</TableCell>
 						<TableCell>
 							{transaction.date
@@ -63,13 +81,19 @@ export function ControlTable() {
 								: "-"}
 						</TableCell>
 						<TableCell className="flex gap-2">
-							<Button variant="outline">
-								<Edit />
-							</Button>
+							<DialogEditAccount
+								name={transaction.name}
+								price={transaction.price}
+								status={transaction.status}
+								type={transaction.type}
+								frequency={transaction.frequency}
+								date={transaction.date}
+								validity={transaction.validity}
+							/>
 
-							<Button variant="outline">
-								<X />
-							</Button>
+							{transaction.id && (
+								<DeleteTransactionConfirmation id={transaction.id} />
+							)}
 						</TableCell>
 					</TableRow>
 				))}
