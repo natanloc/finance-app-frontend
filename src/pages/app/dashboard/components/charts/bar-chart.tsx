@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noNonNullAssertion: . */
 "use client"
 
 import * as React from "react"
@@ -17,41 +18,9 @@ import {
 	ChartTooltipContent,
 } from "@/components/ui/chart"
 import { Button } from "@/components/ui/button"
+import { TransactionsContext } from "@/contexts/transactions-context"
 
 export const description = "An interactive bar chart"
-
-const chartData = [
-	{ date: "2024-04-01", income: 222, outcome: 150 },
-	{ date: "2024-04-02", income: 97, outcome: 180 },
-	{ date: "2024-04-03", income: 167, outcome: 120 },
-	{ date: "2024-04-04", income: 242, outcome: 260 },
-	{ date: "2024-04-05", income: 373, outcome: 290 },
-	{ date: "2024-04-06", income: 301, outcome: 340 },
-	{ date: "2024-04-07", income: 245, outcome: 180 },
-	{ date: "2024-04-08", income: 409, outcome: 320 },
-	{ date: "2024-04-09", income: 59, outcome: 110 },
-	{ date: "2024-04-10", income: 261, outcome: 190 },
-	{ date: "2024-04-11", income: 327, outcome: 350 },
-	{ date: "2024-04-12", income: 292, outcome: 210 },
-	{ date: "2024-04-13", income: 342, outcome: 380 },
-	{ date: "2024-04-14", income: 137, outcome: 220 },
-	{ date: "2024-04-15", income: 120, outcome: 170 },
-	{ date: "2024-04-16", income: 138, outcome: 190 },
-	{ date: "2024-04-17", income: 446, outcome: 360 },
-	{ date: "2024-04-18", income: 364, outcome: 410 },
-	{ date: "2024-04-19", income: 243, outcome: 180 },
-	{ date: "2024-04-20", income: 89, outcome: 150 },
-	{ date: "2024-04-21", income: 137, outcome: 200 },
-	{ date: "2024-04-22", income: 224, outcome: 170 },
-	{ date: "2024-04-23", income: 138, outcome: 230 },
-	{ date: "2024-04-24", income: 387, outcome: 290 },
-	{ date: "2024-04-25", income: 215, outcome: 250 },
-	{ date: "2024-04-26", income: 75, outcome: 130 },
-	{ date: "2024-04-27", income: 383, outcome: 420 },
-	{ date: "2024-04-28", income: 122, outcome: 180 },
-	{ date: "2024-04-29", income: 315, outcome: 240 },
-	{ date: "2024-04-30", income: 454, outcome: 380 },
-]
 
 const chartConfig = {
 	views: {
@@ -63,7 +32,7 @@ const chartConfig = {
 	},
 	outcome: {
 		label: "Outcome",
-		color: "var(--chart-1)",
+		color: "var(--chart-5)",
 	},
 } satisfies ChartConfig
 
@@ -71,12 +40,43 @@ export function ChartBarInteractive() {
 	const [activeChart, setActiveChart] =
 		React.useState<keyof typeof chartConfig>("income")
 
+	const { transactionsFiltered } = React.useContext(TransactionsContext)
+
+	const chartData = React.useMemo(() => {
+		const data: Record<string, { income: number; outcome: number }> = {}
+
+		transactionsFiltered.forEach((transaction) => {
+			const dataKey = new Date(transaction.date!).toISOString().split("T")[0]
+
+			if (!data[dataKey]) {
+				data[dataKey] = { income: 0, outcome: 0 }
+			}
+
+			if (transaction.type === "Income") {
+				data[dataKey].income += Number(transaction.price)
+			} else {
+				data[dataKey].outcome += Number(transaction.price)
+			}
+		})
+
+		return Object.entries(data)
+			.map(([date, values]) => ({
+				date,
+				income: values.income,
+				outcome: values.outcome,
+			}))
+			.sort(
+				(before, after) =>
+					new Date(before.date).getTime() - new Date(after.date).getTime(),
+			)
+	}, [transactionsFiltered])
+
 	const total = React.useMemo(
 		() => ({
 			income: chartData.reduce((acc, curr) => acc + curr.income, 0),
 			outcome: chartData.reduce((acc, curr) => acc + curr.outcome, 0),
 		}),
-		[],
+		[chartData],
 	)
 
 	return (
@@ -101,8 +101,11 @@ export function ChartBarInteractive() {
 								<span className="text-muted-foreground text-xs">
 									{chartConfig[chart].label}
 								</span>
-								<span className="text-lg text-foreground leading-none font-bold sm:text-3xl">
-									{total[key as keyof typeof total].toLocaleString()}
+								<span className="text-lg text-foreground leading-none font-bold sm:text-xl">
+									{total[key as keyof typeof total].toLocaleString("pt-BR", {
+										style: "currency",
+										currency: "BRL",
+									})}
 								</span>
 							</Button>
 						)
@@ -131,7 +134,7 @@ export function ChartBarInteractive() {
 							minTickGap={32}
 							tickFormatter={(value) => {
 								const date = new Date(value)
-								return date.toLocaleDateString("en-US", {
+								return date.toLocaleDateString("pt-BR", {
 									month: "short",
 									day: "numeric",
 								})
@@ -143,7 +146,7 @@ export function ChartBarInteractive() {
 									className="w-[150px]"
 									nameKey="views"
 									labelFormatter={(value) => {
-										return new Date(value).toLocaleDateString("en-US", {
+										return new Date(value).toLocaleDateString("pt-BR", {
 											month: "short",
 											day: "numeric",
 											year: "numeric",

@@ -12,11 +12,16 @@ import { useContext, useEffect, useState } from "react"
 import { TransactionsContext } from "@/contexts/transactions-context"
 
 export function Dashboard() {
-	const { transactions } = useContext(TransactionsContext)
+	const { transactionsFiltered, setFilters, filters } =
+		useContext(TransactionsContext)
+
 	const [income, setIncome] = useState<number>(0)
 	const [incomeExpected, setIncomeExpected] = useState<number>(0)
 	const [outcome, setOutcome] = useState<number>(0)
 	const [outcomeExpected, setOutcomeExpected] = useState<number>(0)
+
+	const [month, setMonth] = useState<string | null>(null)
+	const [year, setYear] = useState<string | null>(null)
 
 	function setData() {
 		let income = 0
@@ -24,7 +29,7 @@ export function Dashboard() {
 		let incomeExpected = 0
 		let outcomeExpected = 0
 
-		transactions?.map((transaction) => {
+		transactionsFiltered?.map((transaction) => {
 			if (transaction.type === "Income") {
 				if (transaction.frequency === "Fixed") {
 					incomeExpected += Number(transaction.price)
@@ -46,22 +51,28 @@ export function Dashboard() {
 		setOutcome(outcome)
 		setIncomeExpected(incomeExpected)
 		setOutcomeExpected(outcomeExpected)
-
-		console.log(outcome)
 	}
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: .
 	useEffect(() => {
 		setData()
-		console.log("data set")
-	}, [])
+	}, [filters])
+
+	function handleSearch(month: number, year: number) {
+		if (!year || !month) {
+			alert("Por favor, escolha um período de tempo válido")
+			return
+		}
+
+		setFilters({ month: month, year: year })
+	}
 
 	return (
 		<div className="flex flex-col gap-3 py-8 px-4">
 			<div className="flex gap-4 px-3">
-				<SelectMonth />
-				<SelectYear />
-				<Button onClick={setData}>
+				<SelectMonth value={month} onChange={setMonth} />
+				<SelectYear value={year} onChange={setYear} />
+				<Button onClick={() => handleSearch(Number(month), Number(year))}>
 					<Search />
 					Search
 				</Button>

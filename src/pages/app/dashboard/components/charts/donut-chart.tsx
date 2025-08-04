@@ -18,13 +18,10 @@ import {
 	ChartTooltipContent,
 } from "@/components/ui/chart"
 import { ArrowDown, ArrowUp } from "lucide-react"
+import { TransactionsContext } from "@/contexts/transactions-context"
+import { useContext } from "react"
 
 export const description = "A donut chart with text"
-
-const chartData = [
-	{ browser: "income", amount: 275, fill: "var(--color-income)" },
-	{ browser: "outcome", amount: 200, fill: "var(--color-outcome)" },
-]
 
 const chartConfig = {
 	amount: {
@@ -32,34 +29,72 @@ const chartConfig = {
 	},
 	income: {
 		label: "Income",
-		color: "var(--chart-1)",
+		color: "var(--chart-2)",
 	},
 	outcome: {
 		label: "Outcome",
-		color: "var(--chart-2)",
+		color: "var(--chart-5)",
 	},
 } satisfies ChartConfig
 
 export function ChartPieDonutText() {
-	const totalAmount = React.useMemo(() => {
-		return chartData.reduce((acc, curr) => acc + curr.amount, 0)
-	}, [])
+	const { transactionsFiltered, isLoading } = useContext(TransactionsContext)
+
+	const { income, outcome } = React.useMemo(() => {
+		if (!transactionsFiltered?.length) return { income: 0, outcome: 0 }
+
+		return transactionsFiltered.reduce(
+			(acc, curr) => {
+				if (curr.type === "Income" && curr.frequency === "Variable")
+					acc.income += Number(curr.price)
+				if (curr.type === "Outcome" && curr.frequency === "Variable")
+					acc.outcome += Number(curr.price)
+				return acc
+			},
+			{ income: 0, outcome: 0 },
+		)
+	}, [transactionsFiltered])
+
+	if (isLoading) {
+		return <h2>Loading Chart</h2>
+	}
+
+	if (!transactionsFiltered.length) {
+		return <h2>Not enough transactions</h2>
+	}
+
+	const totalAmount = Number(income) - Number(outcome)
+
+	const chartData = [
+		{
+			transaction: "Total amount",
+			amount: totalAmount > 0 ? totalAmount : 0,
+			fill: "var(--color-income)",
+		},
+		{ transaction: "outcome", amount: outcome, fill: "var(--color-outcome)" },
+	]
 
 	return (
 		<Card className="flex flex-col col-span-2">
 			<CardHeader className="items-center pb-0">
 				<div className="flex items-center justify-between">
-					<CardTitle>Transactions compared</CardTitle>
+					<CardTitle>Total amount</CardTitle>
 
 					<div className="flex gap-4 items-center">
 						<div className="flex gap-2 items-center">
 							<ArrowUp className="w-4 h-4 text-emerald-600" />
-							R$ 1923,00
+							{income.toLocaleString("pt-BR", {
+								style: "currency",
+								currency: "BRL",
+							})}
 						</div>
 
 						<div className="flex gap-2 items-center">
 							<ArrowDown className="w-4 h-4 text-rose-600" />
-							R$ 852,00
+							{outcome.toLocaleString("pt-BR", {
+								style: "currency",
+								currency: "BRL",
+							})}
 						</div>
 					</div>
 				</div>
@@ -78,7 +113,7 @@ export function ChartPieDonutText() {
 						<Pie
 							data={chartData}
 							dataKey="amount"
-							nameKey="browser"
+							nameKey="transaction"
 							innerRadius={60}
 							strokeWidth={5}
 						>
@@ -95,7 +130,7 @@ export function ChartPieDonutText() {
 												<tspan
 													x={viewBox.cx}
 													y={viewBox.cy}
-													className="fill-foreground text-3xl font-bold"
+													className="fill-foreground text-xl font-bold"
 												>
 													{totalAmount.toLocaleString()}
 												</tspan>
