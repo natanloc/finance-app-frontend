@@ -82,6 +82,7 @@ export function ControlTable() {
 						</TableCell>
 						<TableCell className="flex gap-2">
 							<DialogEditAccount
+								id={transaction.id}
 								name={transaction.name}
 								price={transaction.price}
 								status={transaction.status}

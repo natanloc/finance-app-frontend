@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noNonNullAssertion: . */
 import { Button } from "@/components/ui/button"
 import {
 	Dialog,
@@ -24,6 +25,8 @@ import { z } from "zod"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import type { transactionData } from "@/types/transaction"
+import { updateTransaction } from "@/api/update-transaction"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 const newTransactionFormSchema = z.object({
 	name: z.string().min(1, "Required field"),
@@ -38,6 +41,7 @@ const newTransactionFormSchema = z.object({
 type newTransactionFormInputs = z.infer<typeof newTransactionFormSchema>
 
 export function DialogEditAccount({
+	id,
 	name,
 	price,
 	date,
@@ -64,31 +68,28 @@ export function DialogEditAccount({
 		},
 	})
 
-	function handleEditTransaction(data: newTransactionFormInputs) {
+	const queryClient = useQueryClient()
+
+	const { mutateAsync: updateTransactionMutation } = useMutation({
+		mutationFn: handleEditTransaction,
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["transactions"] })
+		},
+	})
+
+	async function handleEditTransaction(data: newTransactionFormInputs) {
 		const { name, price, date, frequency, status, type, validity } = data
 
-		console.log(
-			"Name: ",
+		console.log(id)
+		await updateTransaction(id!, {
 			name,
-			"\n",
-			"Price: ",
 			price,
-			"\n",
-			"Date: ",
 			date,
-			"\n",
-			"Frequency: ",
 			frequency,
-			"\n",
-			"Status: ",
 			status,
-			"\n",
-			"Type: ",
 			type,
-			"\n",
-			"Validity: ",
-			validity,
-		)
+			validity: validity ?? null,
+		})
 	}
 
 	return (
@@ -99,7 +100,7 @@ export function DialogEditAccount({
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-[425px]">
-				<form onSubmit={handleSubmit(handleEditTransaction)}>
+				<form onSubmit={handleSubmit(updateTransactionMutation)}>
 					<DialogHeader>
 						<DialogTitle>Editing Account</DialogTitle>
 						<DialogDescription>
@@ -216,12 +217,14 @@ export function DialogEditAccount({
 						</div>
 					</div>
 					<DialogFooter className="mt-8">
-						<DialogClose asChild>
-							<Button variant="outline">Cancel</Button>
+						<DialogClose>
+							<Button variant="outline" className="mr-2">
+								Cancel
+							</Button>
+							<Button type="submit" disabled={isSubmitting}>
+								Save
+							</Button>
 						</DialogClose>
-						<Button type="submit" disabled={isSubmitting}>
-							Save
-						</Button>
 					</DialogFooter>
 				</form>
 			</DialogContent>
